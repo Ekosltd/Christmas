@@ -16,7 +16,7 @@ import streamlit as st
 # ---------------------------------------------------------------
 PARTICIPANTS = [
     "Alessia", "Michael", "Mick", "Brian", "Nicola", "Alison",
-    "Joe", "Gemma", "Dianne", "Connor", "Chris",
+    "Joe", "Gemma", "Dianne", "Connor", "Chris", "Innes"
 ]
 DATA_FILE = Path(__file__).parent / "secret_santa_data.json"
 
@@ -87,7 +87,7 @@ def reset_data():
 # App
 # ---------------------------------------------------------------
 st.set_page_config(page_title="Secret Santa", page_icon="🎅", layout="centered")
-st.title("🎅 Office Secret Santa")
+st.title("🎅 EKOS Secret Santa")
 
 tab_draw, tab_admin = st.tabs(["Draw", "Admin"])
 
