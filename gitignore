@@ -1,0 +1,6 @@
+# Secret Santa draw data - never commit (it contains the matches)
+secret_santa_data.json
+secret_santa_data.tmp
+
+# Streamlit secrets (admin password)
+.streamlit/secrets.toml
