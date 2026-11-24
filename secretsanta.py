@@ -46,6 +46,10 @@ def make_assignments(names):
     return {shuffled[i]: shuffled[(i + 1) % len(shuffled)] for i in range(len(shuffled))}
 
 
+def fresh_data():
+    return {"assignments": make_assignments(PARTICIPANTS), "revealed": {}}
+
+
 def _read():
     if DATA_FILE.exists():
         return json.loads(DATA_FILE.read_text())
@@ -58,11 +62,18 @@ def _write(data):
     tmp.replace(DATA_FILE)  # atomic swap, never a half-written file
 
 
+def _is_current(data):
+    """True if the saved draw was made for exactly today's PARTICIPANTS list."""
+    return data is not None and sorted(data["assignments"]) == sorted(PARTICIPANTS)
+
+
 def load_data():
     with LOCK:
         data = _read()
-        if data is None:
-            data = {"assignments": make_assignments(PARTICIPANTS), "revealed": {}}
+        # No file yet, or the name list was edited since the draw was made
+        # (e.g. someone removed) -> start a clean draw for the current list.
+        if not _is_current(data):
+            data = fresh_data()
             _write(data)
         return data
 
@@ -71,7 +82,7 @@ def claim_draw(name):
     """Returns the match if this is the person's first draw, else None."""
     with LOCK:
         data = _read()
-        if name in data["revealed"]:
+        if not _is_current(data) or name in data["revealed"]:
             return None
         data["revealed"][name] = datetime.now().strftime("%d %b %Y, %H:%M:%S")
         _write(data)
@@ -80,7 +91,7 @@ def claim_draw(name):
 
 def reset_data():
     with LOCK:
-        _write({"assignments": make_assignments(PARTICIPANTS), "revealed": {}})
+        _write(fresh_data())
 
 
 # ---------------------------------------------------------------
@@ -131,15 +142,15 @@ with tab_admin:
         st.stop()
 
     data = load_data()
-    st.subheader("Results")
+    st.subheader("Who has drawn")
+    # Matches are deliberately NOT shown here, so the organiser can't see them either.
     rows = [
         {
-            "Giver": giver,
-            "Buying for": receiver,
-            "Drawn?": "✅" if giver in data["revealed"] else "⏳",
-            "When": data["revealed"].get(giver, ""),
+            "Name": person,
+            "Drawn?": "✅" if person in data["revealed"] else "⏳",
+            "When": data["revealed"].get(person, ""),
         }
-        for giver, receiver in sorted(data["assignments"].items())
+        for person in sorted(PARTICIPANTS)
     ]
     st.dataframe(rows, use_container_width=True, hide_index=True)
 
@@ -148,7 +159,10 @@ with tab_admin:
 
     st.divider()
     st.subheader("Reset")
-    st.write("Clears all draws and reshuffles the matches. Use for testing.")
+    st.write(
+        "Clears all draws and reshuffles the matches. "
+        "Anyone who already drew will need to draw again."
+    )
     confirm = st.checkbox("Yes, I want to reset everything")
     if st.button("Reset 🔄", disabled=not confirm):
         reset_data()
