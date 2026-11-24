@@ -16,7 +16,7 @@ import streamlit as st
 # ---------------------------------------------------------------
 PARTICIPANTS = [
     "Alessia", "Michael", "Mick", "Brian", "Nicola", "Alison",
-    "Joe", "Gemma", "Dianne", "Connor", "Chris", "Innes"
+    "Joe", "Gemma", "Chris", "Innes"
 ]
 DATA_FILE = Path(__file__).parent / "secret_santa_data.json"
 
